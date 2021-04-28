@@ -2,121 +2,131 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include<semaphore.h>
-#include<fcntl.h>
 #include <pthread.h>
+#include <fcntl.h>
+#include <semaphore.h>
+#include <time.h>
 
-void *Agente (void*arg);
-void *Fumador1 (void*arg);
-void* Fumador2(void* arg);
-void* Fumador3(void* arg);
+sem_t sem_tabaco;
+sem_t sem_papel;
+sem_t sem_cerillo;
+sem_t sem_agente;
 
-sem_t cerillo;
-sem_t papel;
-sem_t tabaco;
-sem_t agente;
+void*fumador1(void*argumento);
+void*fumador2(void*argumento);
+void*fumador3(void*argumento);
+void*agente(void*argumento);
 
-int PAPEL = 0;
-int TABACO = 1;
-int CERILLO = 2;
+int papel=0,tabaco=1,cerillo=2;
 
-void  main(void)
-{
-    pthread_t th1,th2,th3,th4;
-    /*Inicializar los semaforos */
-    sem_init(&agente, 0, 1);
-    sem_init(&cerillo, 0, 0);
-    sem_init(&papel, 0, 0);
-    sem_init(&tabaco, 0, 0);
-    
+void main(void){
+pthread_t  agent, fum1_c, fum2_p, fum3_t;
 
-    /*crear los procesos ligeros */
-    pthread_create(&th1,NULL,Agente,NULL);
-    pthread_create(&th2,NULL, Fumador1 ,NULL);
-    pthread_create(&th3, NULL, Fumador2 , NULL);
-    pthread_create(&th4, NULL, Fumador3 , NULL);
+sem_init(&sem_cerillo,0,0);
+sem_init(&sem_tabaco,0,0);
+sem_init(&sem_papel,0,0);
+sem_init(&sem_agente,0,1);
 
-
-    /*Esperar su finalización*/
-    pthread_join(th1,NULL);
-    pthread_join(th2,NULL);
-    pthread_join(th3, NULL);
-    pthread_join(th4, NULL);
-    sem_destroy(&agente);
-    sem_destroy(&cerillo);
-    sem_destroy(&papel);
-    sem_destroy(&tabaco);
-    exit(0);
+if(pthread_create(&fum1_c,NULL,fumador1,NULL)){
+     printf("Problema en la creacion del hilo\n");
+     exit(EXIT_FAILURE);
 }
 
-void *Agente (void*var){
-int ing1 = 0;
-int ing2 = 0;
-
-while(1)
-{
-            /*un hueco menos */
-    sem_wait(&agente); //P
-    do {
-        ing1 = rand() % 3;
-        ing2 = rand() % 3;
-        printf("\n ing1 : %i\t ing2 : %i \n", ing1, ing2);
-    } while (ing1 == ing2); //Necesitamos dos ingredientes diferentes
-    printf("\nEl ingrediente 1 es: %i\n", ing1);
-    printf("El ingrediente 2 es: %i\n", ing2);
-    if ((ing1==0 && ing2 ==1) || (ing2 == 0 && ing1 == 1)) {
-        sem_post(&cerillo);//V
-        sem_wait(&agente);
-    }
-    else if ((ing1 == 0 && ing2 == 2) || (ing2 == 0 && ing1 == 2)) {
-        sem_post(&tabaco);//V
-        sem_wait(&agente);
-    }
-    else if ((ing1 == 1 && ing2 == 2) || (ing2 == 1 && ing1 == 2)) {
-        sem_post(&papel);//V
-        sem_wait(&agente);
-    }
-}
-pthread_exit(0);
+if(pthread_create(&fum2_p,NULL,fumador2,NULL)){
+printf("Problema en la creacion del hilo\n");
+exit(EXIT_FAILURE);
 }
 
-void *Fumador1 (void*var){
-
-while(1)
-{
-            /*un elemento menos */
-    sem_wait(&cerillo); //P
-    printf("\nSpy el fumador tengo el cerillo %li\n", pthread_self());
-    sleep(2);
-    sem_post(&agente);
-
+if(pthread_create(&fum3_t,NULL,fumador3,NULL)){
+      printf("Problema en la creacion del hilo\n");
+      exit(EXIT_FAILURE);
 }
-pthread_exit(0);
+if(pthread_create(&agent,NULL,agente,NULL)){
+     printf("Problema en la creacion del hilo\n");
+     exit(EXIT_FAILURE);
 }
-void* Fumador2(void* var) {
 
-    while(1)
-    {
-        /*un elemento menos */
-        sem_wait(&papel); //P
-        printf("\nSpy el fumador tengo el papel %li\n", pthread_self());
-        sleep(2);
-        sem_post(&agente);
+printf("Proceso papa %li\n",pthread_self());
 
-    }
+if(pthread_join(fum1_c,NULL)){
+       printf("Problema al crear enlace con otro hilo\n");
+       exit(EXIT_FAILURE);
+}
+if(pthread_join(fum2_p,NULL)){
+     printf("Problema al crear enlace con otro hilo\n");
+     exit(EXIT_FAILURE);
+}
+if(pthread_join(fum3_t,NULL)){
+     printf("Problema al crear enlace con otro hilo\n");
+     exit(EXIT_FAILURE);
+}
+if(pthread_join(agent,NULL)){
+    printf("Problema al crear enlace con otro hilo\n");
+    exit(EXIT_FAILURE);
+}
+  sem_destroy(&sem_cerillo);
+  sem_destroy(&sem_papel);
+  sem_destroy(&sem_tabaco);
+  sem_destroy(&sem_agente);
+  exit(EXIT_SUCCESS);
+}
+
+void*fumador1(void*argumento){
+     while(1){
+               sem_wait(&sem_cerillo);
+               printf("Soy el fumador %li y tengo el cerillo\n",pthread_self());
+               sleep(2);
+               sem_post(&sem_agente);
+      }
+      pthread_exit(0);
+}
+
+
+void* fumador2(void* argumento){
+   while(1){
+                sem_wait(&sem_papel);
+                printf("Soy el fumador %li y tengo el papel\n",pthread_self());
+                sleep(2);
+                sem_post(&sem_agente);
+   }
     pthread_exit(0);
 }
-void* Fumador3(void* var) {
-
-    while(1)
-    {
-        /*un elemento menos */
-        sem_wait(&tabaco); //P
-        printf("\nSpy el fumador tengo el tabaco %li\n", pthread_self());
-        sleep(2);
-        sem_post(&agente);
-
-    }
-    pthread_exit(0);
+void* fumador3(void* argumento){
+        while(1){
+                  sem_wait(&sem_tabaco);
+                  printf("Soy el fumador %li y tengo el tabaco\n",pthread_self());
+                  sleep(2);
+                  sem_post(&sem_agente);
+       } 
+       pthread_exit(0);
 }
 
+void* agente(void* argumento){
+      int ing1=0,ing2=0;
+     
+      while(1){
+              sem_wait(&sem_agente);     
+              srand(time(NULL));   //  cambia de semilla aleatoria   en caso de que siempre salgan los mismos ingredientes
+              do{
+                           ing1=rand()%3;
+                           ing2=rand()%3;
+                }while(ing1==ing2);
+
+                printf("El ingrediente 1 es: %i\n",ing1);
+                printf("El ingrediente 2 es: %i\n",ing2);
+
+                if((ing1==0 && ing2==1)||(ing1==0 && ing2==1)){
+                             sem_post(&sem_cerillo);
+                             //sem_wait(&sem_agente);                             // quitar esta línea       mañana explico porque
+                }
+                else if((ing1==1 && ing2==2)||(ing1==2 && ing2==1)){
+                              sem_post(&sem_papel);
+                              //sem_wait(&sem_agente);                         // quitar esta línea       mañana explico porque
+               }
+               else if((ing1==0 && ing2==2)||(ing1==2 && ing2==0)){
+                             sem_post(&sem_tabaco);
+                             //sem_wait(&sem_agente);                       // quitar esta línea       mañana explico porque
+             }
+   }
+   pthread_exit(0);
+}
