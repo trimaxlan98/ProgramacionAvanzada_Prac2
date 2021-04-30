@@ -118,6 +118,7 @@ if (pthread_join(empleado_pe, NULL)) {
 
 void*Cliente(void*argumento){
       int corte=0, pintura=0, manicure=0, pedicura=0;
+      sleep(5);
       do {
           corte = rand() % 2;
           pintura = rand() % 2;
@@ -125,30 +126,53 @@ void*Cliente(void*argumento){
           pedicura = rand() % 2;
       } while (corte == 0 && pintura == 0 && manicure == 0 && pedicura == 0);
       sem_wait(&sem_silla);//sentarse en la silla
-      printf("Resultados: %i, %i, %i, %i\n ", corte, pintura, manicure, pedicura);
+      printf("Resultados del cliente %li: %i, %i, %i, %i\n ",pthread_self(), corte, pintura, manicure, pedicura);
       printf("Soy el cliente %li y estoy sentado \n", pthread_self());
-      //if(corte==1)
-      sem_wait(&sem_disp_corte);
-      sem_wait(&sem_disp_pintura);
-      sem_wait(&sem_disp_manicura);
-      sem_wait(&sem_disp_pedicura);
+    
+      if (corte == 1) {
+          sem_wait(&sem_disp_corte);
+          printf("Soy el cliente %li y quiero un corte\n", pthread_self());
+      }
+      if (pintura == 1) {
+          sem_wait(&sem_disp_pintura);
+          printf("Soy el cliente %li y quiero pintar mi cabello\n", pthread_self());
+      }
+      if (manicure == 1) {
+          sem_wait(&sem_disp_manicura);
+          printf("Soy el cliente %li y quiero una manicura\n", pthread_self());
+      }
+      if (pedicura == 1) {
+          sem_wait(&sem_disp_pedicura);
+          printf("Soy el cliente %li y quiero una pedicura\n", pthread_self());
+      }
 
       sem_post(&sem_silla);// se levanta de la silla
       printf("El cliente %li desocupo la silla  \n", pthread_self());
-      sem_post(&sem_cliente_listo_c);
-      sem_wait(&sem_corte);
-      sem_post(&sem_cliente_listo_p);
-      sem_wait(&sem_pintura);
-      sem_post(&sem_cliente_listo_m);
-      sem_wait(&sem_manicura);
-      sem_post(&sem_cliente_listo_pe);
-      sem_wait(&sem_pedicura);
+
+      if (corte == 1) {
+          sem_post(&sem_cliente_listo_c);
+          sem_wait(&sem_corte);
+      }
+      if (pintura == 1) {
+          sem_post(&sem_cliente_listo_p);
+          sem_wait(&sem_pintura);
+      }
+      if (manicure == 1) {
+          sem_post(&sem_cliente_listo_m);
+          sem_wait(&sem_manicura);
+      }
+      if (pedicura == 1) {
+          sem_post(&sem_cliente_listo_pe);
+          sem_wait(&sem_pedicura);
+      }
+
+
       printf("Soy el cliente %li y termine \n", pthread_self());
       pthread_exit(0);
 }
 void* Empleado_Cortar_Cabello(void* argumento) {
     while (1) {
-        sleep(5);
+        //sleep(5);
         sem_wait(&sem_cliente_listo_c);
         printf("Soy el Empleado %li \n", pthread_self());
         printf("Estoy cortando el cabello...\n");
@@ -160,7 +184,7 @@ void* Empleado_Cortar_Cabello(void* argumento) {
 }
 void* Empleado_Pintar_Cabello(void* argumento) {
     while (1) {
-        sleep(5);
+        //sleep(5);
         sem_wait(&sem_cliente_listo_p);
         printf("Soy el Empleado %li \n", pthread_self());
         printf("Estoy pintando el cabello...\n");
@@ -172,7 +196,7 @@ void* Empleado_Pintar_Cabello(void* argumento) {
 }
 void* Empleado_Manicura(void* argumento) {
     while (1) {
-        sleep(5);
+        //sleep(5);
         sem_wait(&sem_cliente_listo_m);
         printf("Soy el Empleado %li \n", pthread_self());
         printf("Estoy haciendo la manicura...\n");
@@ -184,7 +208,7 @@ void* Empleado_Manicura(void* argumento) {
 }
 void* Empleado_Pedicura(void* argumento) {
     while (1) {
-        sleep(5);
+        //sleep(5);
         sem_wait(&sem_cliente_listo_pe);
         printf("Soy el Empleado %li \n", pthread_self());
         printf("Estoy haciendo la pedicura...\n");
