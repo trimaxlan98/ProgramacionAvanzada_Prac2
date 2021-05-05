@@ -1,4 +1,5 @@
 /*Rosas Palacios Alan - Enriquez Melendez Jesus - Orozco Segovia Mikael Imanol - Santiago Galvan*/
+/*Programa estetica con semaforos*/
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -119,7 +120,7 @@ if (pthread_join(empleado_pe, NULL)) {
 
 void*Cliente(void*argumento){
       int corte=0, pintura=0, manicure=0, pedicura=0;
-      sleep(5);
+      //sleep(5);
       do { // Si el numero aleatorio es 1 el cliente pedira ese servicio
           corte = rand() % 2;
           pintura = rand() % 2;
