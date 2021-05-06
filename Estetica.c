@@ -1,4 +1,4 @@
-/*Rosas Palacios Alan - Enriquez Melendez Jesus - Orozco Segovia Mikael Imanol - Santiago Galvan*/
+/*Rosas Palacios Alan - Enriquez Melendez Jesus - Orozco Segovia Mikael Imanol - Cesar Santiago Galvan Sanchez*/
 /*Programa estetica con semaforos*/
 #include <stdio.h>
 #include <unistd.h>
